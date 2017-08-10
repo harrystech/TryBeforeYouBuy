@@ -10,24 +10,44 @@ import UIKit
 import SceneKit
 import ARKit
 
-class ViewController: UIViewController, ARSCNViewDelegate {
+class ViewController: UIViewController, ARSCNViewDelegate, ARSessionDelegate {
 
     @IBOutlet var sceneView: ARSCNView!
+
+    var anchors = [ARAnchor]()
+
+    let NODE_NAME = "harrys-razor"
     
     override func viewDidLoad() {
         super.viewDidLoad()
         
         // Set the view's delegate
         sceneView.delegate = self
+        sceneView.session.delegate = self
         
         // Show statistics such as fps and timing information
         sceneView.showsStatistics = true
-        
+
+//        let lookAtConstraint = SCNLookAtConstraint(target: sceneView.pointOfView)
+//        lookAtConstraint.isGimbalLockEnabled = true
+//        lookAtConstraint.influenceFactor = 0.01
+
         // Create a new scene
-        let scene = SCNScene(named: "art.scnassets/ship.scn")!
-        
-        // Set the scene to the view
-        sceneView.scene = scene
+        let razorScene = SCNScene(named: "art.scnassets/\(NODE_NAME).scn")!
+        if let node = razorScene.rootNode.childNode(withName: NODE_NAME, recursively: true) {
+            let material = SCNMaterial()
+            material.diffuse.contents = UIColor(hue: 27.0, saturation: 86.0, brightness: 93.0, alpha: 1.0)
+
+            node.geometry?.materials = [material]
+        }
+
+        sceneView.scene = razorScene
+
+        self.anchors = [ARAnchor]()
+
+//        let tapGetsureRecognizer = UITapGestureRecognizer(target: self, action: #selector(handleTapFrom(_:)))
+//        tapGetsureRecognizer.numberOfTapsRequired = 1
+//        self.sceneView.addGestureRecognizer(tapGetsureRecognizer)
     }
     
     override func viewWillAppear(_ animated: Bool) {
@@ -62,10 +82,34 @@ class ViewController: UIViewController, ARSCNViewDelegate {
         return node
     }
 */
-    
+
+    func renderer(_ renderer: SCNSceneRenderer, didUpdate node: SCNNode, for anchor: ARAnchor) {
+//        if anchors.contains(anchor) {
+//            let razorAnchor = self.razorNode
+//            razorAnchor.position.z = -0.5
+//            node.addChildNode(razorAnchor)
+//        }
+    }
+
+//    func renderer(_ renderer: SCNSceneRenderer, willUpdate node: SCNNode, for anchor: ARAnchor) {
+//        if anchors.contains(anchor) {
+//            print("move the node")
+//        }
+//    }
+
     func session(_ session: ARSession, didFailWithError error: Error) {
         // Present an error message to the user
         
+    }
+
+    func session(_ session: ARSession, didUpdate frame: ARFrame) {
+        razorNode.position = SCNVector3Make(frame.camera.transform[3].x, frame.camera.transform[3].y, frame.camera.transform[3].z - 0.15)
+
+        razorNode.eulerAngles.x = frame.camera.eulerAngles.x
+        razorNode.eulerAngles.y = frame.camera.eulerAngles.y
+        razorNode.eulerAngles.z = frame.camera.eulerAngles.z + Float.pi/2.0
+
+        print("Razor angles: x: \(razorNode.eulerAngles.x),y: \(razorNode.eulerAngles.y),z: \(razorNode.eulerAngles.z), ")
     }
     
     func sessionWasInterrupted(_ session: ARSession) {
@@ -76,5 +120,22 @@ class ViewController: UIViewController, ARSCNViewDelegate {
     func sessionInterruptionEnded(_ session: ARSession) {
         // Reset tracking and/or remove existing anchors if consistent tracking is required
         
+    }
+
+    var razorNode: SCNNode {
+        return self.sceneView.scene.rootNode.childNode(withName: NODE_NAME, recursively: true)!
+    }
+
+    // MARK: - Gesture Recognizers
+
+    @objc func handleTapFrom(_ recognizer: UITapGestureRecognizer) {
+//        if let frame = sceneView.session.currentFrame {
+//            print("adding anchor")
+//            let translation = matrix_identity_float4x4
+//            let handTransform = simd_mul(frame.camera.transform, translation)
+//            let anchor = ARAnchor(transform: handTransform)
+//            self.anchors.append(anchor)
+//            sceneView.session.add(anchor: anchor)
+//        }
     }
 }
