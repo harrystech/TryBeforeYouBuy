@@ -37,11 +37,22 @@ class ViewController: UIViewController, ARSCNViewDelegate, ARSessionDelegate {
         if let node = razorScene.rootNode.childNode(withName: NODE_NAME, recursively: true) {
             let material = SCNMaterial()
             material.diffuse.contents = UIColor(hue: 27.0, saturation: 86.0, brightness: 93.0, alpha: 1.0)
+            material.diffuse.contentsTransform = SCNMatrix4MakeScale(0.5, 0.5, 0.5)
 
             node.geometry?.materials = [material]
         }
 
+        let beardMaterial = SCNMaterial()
+        beardMaterial.diffuse.contents = UIImage(named: "beard")
+
+        let sphereGeometry = SCNSphere(radius: 0.2)
+        let sphereNode = SCNNode(geometry: sphereGeometry)
+        sphereNode.geometry?.materials = [beardMaterial]
+
+        sphereNode.position.z = -0.8
+
         sceneView.scene = razorScene
+        sceneView.scene.rootNode.addChildNode(sphereNode)
 
         self.anchors = [ARAnchor]()
 
