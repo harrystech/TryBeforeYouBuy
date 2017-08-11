@@ -9,6 +9,7 @@
 import UIKit
 import SceneKit
 import ARKit
+import CoreImage
 
 class ViewController: UIViewController, ARSCNViewDelegate, ARSessionDelegate {
 
@@ -17,6 +18,7 @@ class ViewController: UIViewController, ARSCNViewDelegate, ARSessionDelegate {
     var anchors = [ARAnchor]()
 
     let NODE_NAME = "harrys-razor"
+    let ciContext = CIContext()
     
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -36,29 +38,62 @@ class ViewController: UIViewController, ARSCNViewDelegate, ARSessionDelegate {
         let razorScene = SCNScene(named: "art.scnassets/\(NODE_NAME).scn")!
         if let node = razorScene.rootNode.childNode(withName: NODE_NAME, recursively: true) {
             let material = SCNMaterial()
-            material.diffuse.contents = UIColor(hue: 27.0, saturation: 86.0, brightness: 93.0, alpha: 1.0)
+            material.diffuse.contents = UIColor.orange
             material.diffuse.contentsTransform = SCNMatrix4MakeScale(0.5, 0.5, 0.5)
 
             node.geometry?.materials = [material]
         }
+//        sceneView.scene = razorScene
 
+
+//        let sphereGeometry = SCNSphere(radius: 0.2)
+//        let beardNode = SCNNode(geometry: sphereGeometry)
+////        let beardNode = createSphereWithBeard(UIImage(named: "chuckNorris")!)
+//        beardNode.position.z = -0.8
+//        sceneView.scene.rootNode.addChildNode(beardNode)
+//
+        let beards = ["chuckNorris", "gandolf", "jackSparrow", "mrT", "zach"].map { UIImage(named: $0) }
+        for beard in beards {
+            if let beard: UIImage = beard {
+                let beardNode = createSphereWithBeard(beard)
+
+                let randomY = Float(arc4random()) / Float(UINT32_MAX) * 3.0 - 1.5
+                let randomX = Float(arc4random()) / Float(UINT32_MAX) * 3.0 - 1.5
+
+                print("X: \(randomX) Y: \(randomY)")
+
+                beardNode.position.z = -0.8
+                beardNode.position.x = randomX
+                beardNode.position.y = randomY
+                sceneView.scene.rootNode.addChildNode(beardNode)
+            }
+        }
+
+        if let razor = SCNScene(named: "art.scnassets/\(NODE_NAME).scn")?.rootNode.childNode(withName: NODE_NAME, recursively: true) {
+            razor.position.z = -0.2
+            let orangeColor = SCNMaterial()
+            orangeColor.diffuse.contents = UIColor.orange
+            razor.geometry?.materials = [orangeColor]
+            razor.pivot = SCNMatrix4Identity
+            sceneView.scene.rootNode.addChildNode(razor)
+        }
+
+//        sphereNode.position.z = -0.8
+
+//        sceneView.scene.rootNode.addChildNode(sphereNode)
+
+        self.anchors = [ARAnchor]()
+    }
+
+    func createSphereWithBeard(_ beard: UIImage) -> SCNNode {
         let beardMaterial = SCNMaterial()
-        beardMaterial.diffuse.contents = UIImage(named: "beard")
+        beardMaterial.diffuse.contents = beard
 
         let sphereGeometry = SCNSphere(radius: 0.2)
         let sphereNode = SCNNode(geometry: sphereGeometry)
         sphereNode.geometry?.materials = [beardMaterial]
 
-        sphereNode.position.z = -0.8
-
-        sceneView.scene = razorScene
-        sceneView.scene.rootNode.addChildNode(sphereNode)
-
-        self.anchors = [ARAnchor]()
-
-//        let tapGetsureRecognizer = UITapGestureRecognizer(target: self, action: #selector(handleTapFrom(_:)))
-//        tapGetsureRecognizer.numberOfTapsRequired = 1
-//        self.sceneView.addGestureRecognizer(tapGetsureRecognizer)
+        return sphereNode
     }
     
     override func viewWillAppear(_ animated: Bool) {
@@ -120,7 +155,19 @@ class ViewController: UIViewController, ARSCNViewDelegate, ARSessionDelegate {
         razorNode.eulerAngles.y = frame.camera.eulerAngles.y
         razorNode.eulerAngles.z = frame.camera.eulerAngles.z + Float.pi/2.0
 
-        print("Razor angles: x: \(razorNode.eulerAngles.x),y: \(razorNode.eulerAngles.y),z: \(razorNode.eulerAngles.z), ")
+//        print("Razor angles: x: \(razorNode.eulerAngles.x),y: \(razorNode.eulerAngles.y),z: \(razorNode.eulerAngles.z), ")
+
+        let frameImage = CIImage(cvPixelBuffer: frame.capturedImage)
+//        self.resultImage = frameImage
+
+
+//        DispatchQueue.main.async {
+//            let detector = CIDetector(ofType: CIDetectorTypeFace, context: self.ciContext, options: [:])
+//            let features = detector?.features(in: frameImage)
+//            if let faceFeature = features?.first as? CIFaceFeature {
+//
+//            }
+//        }
     }
     
     func sessionWasInterrupted(_ session: ARSession) {
